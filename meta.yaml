@@ -35,7 +35,7 @@ test:
     - pytest
 
 about:
-  home: https://www.github.com/ifilot/pypwdft
+  home: https://www.github.com/ifilot/wisex
   license: GPL3
   license_family: GPL
   summary: Python package for performing simple DFT calculations

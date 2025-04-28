@@ -40,7 +40,7 @@ jobs:
         run: |
           rm pyproject.toml
           conda install conda-build
-          conda install -c conda-forge tqdm mendeleev pyfftw pytest
+          conda install -c conda-forge tqdm pytest
           conda build . --output-folder conda-bld/
       - name: Archive packages
         uses: actions/upload-artifact@v4

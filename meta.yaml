@@ -1,0 +1,42 @@
+package:
+  name: "wisex"
+  version: "0.0.1"
+
+source:
+  path: .
+
+build:
+  noarch: python
+
+requirements:
+  build:
+    - python>=3.9
+
+  host:
+    - pip
+    - python>=3.9
+    - setuptools
+    - numpy
+
+  run:
+    - python>=3.9
+    - scipy
+    - numpy
+
+test:
+  requires:
+    - numpy
+    - scipy
+    - setuptools
+    - pytest
+  source_files:
+    - tests/*.py
+  commands:
+    - pytest
+
+about:
+  home: https://www.github.com/ifilot/pypwdft
+  license: GPL3
+  license_family: GPL
+  summary: Python package for performing simple DFT calculations
+  description: See the package README.md for more information.

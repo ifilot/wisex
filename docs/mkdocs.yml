@@ -1,0 +1,48 @@
+site_name: WISEX
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - header.autohide
+    - navigation.sections
+    - navigation.tracking
+    - content.tabs.link
+    - content.code.annotate
+    - content.admonitions
+    - content.admonitions.semantic
+  palette:
+    - scheme: default  # Light mode
+      primary: blue-grey
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate     # Dark mode
+      primary: blue-grey
+      accent: cyan
+      toggle:
+        icon: material/white-balance-sunny
+        name: Switch to light mode
+
+  toggle:
+    default: dark
+  icon:
+    repo: fontawesome/brands/github  # Optional - adds a nice GitHub icon
+
+repo_url: https://github.com/ifilot/wisex
+repo_name: wisex
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - meta
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - attr_list
+  - md_in_html
+  - admonition
+  - pymdownx.details

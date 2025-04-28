@@ -1,0 +1,49 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv
+.virtualenv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# MkDocs build directory
+site/
+mkdocs_build/
+mkdocs-material/
+
+# Editor/IDE configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Python environment files
+Pipfile
+Pipfile.lock
+poetry.lock
+
+# Node dependencies (if using custom JS/CSS)
+node_modules/
+package-lock.json
+yarn.lock
+*.map
+
+# mkdocs-material specific
+*.DS_Store
+.cache/
+*.lock
+
+# Git & CI/CD related
+.git/
+.gitlab/
+*.log

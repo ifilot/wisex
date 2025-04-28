@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: anaconda
-      url: https://anaconda.org/ifilot/pypwdft
+      url: https://anaconda.org/ifilot/wisex
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3

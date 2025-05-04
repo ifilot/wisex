@@ -1,3 +1,2 @@
-from .wisex import WiseX
-
-from ._version import __version__
+from .localizer import Localizer
+from .geodesic import Geodesic

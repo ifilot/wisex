@@ -47,3 +47,5 @@ yarn.lock
 .git/
 .gitlab/
 *.log
+
+examples/cache

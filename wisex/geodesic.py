@@ -15,9 +15,11 @@ class Geodesic:
         Build the generator of the geodesic flow.
         """
         if group == 'su(n)':
-            self.generator = self.__build_su_generator()
+            self.H = self.__build_su_generator()
         elif group == 'so(n)':
-            self.generator = self.__build_so_generator()
+            self.H = self.__build_so_generator()
+
+        self.group = group
 
     def interpolate(self, t):
         """
@@ -26,15 +28,24 @@ class Geodesic:
         if self.H is None:
             raise ValueError("Generator not built. Call build_generator() first.")
         
-        return self.__safe_recast_to_real(scipy.linalg.expm(1j * t * self.H))
+        if self.group == 'su(n)':
+            U_int = self.__safe_recast_to_real(scipy.linalg.expm(1j * t * self.H))
+        elif self.group == 'so(n)':
+            U_int = self.__safe_recast_to_real(scipy.linalg.expm(t * self.H))
+        U_full = np.eye(self.U.shape[0], dtype=U_int.dtype)
+        U_full[:self.nocc, :self.nocc] = U_int
+
+        return U_full
 
     def __build_su_generator(self):
         print("Building SU(n) generator.")
         e,v = self.__diagonalize_unitary_matrix(self.U_occ)
-        self.H = v @ np.diag(np.angle(e)) @ v.conj().T
+        H = v @ np.diag(np.angle(e)) @ v.conj().T
         
-        Utest = scipy.linalg.expm(1j * self.H)
+        Utest = scipy.linalg.expm(1j * H)
         assert np.allclose(Utest, self.U_occ, atol=1e-10), "Generator does not reproduce original matrix."
+
+        return H
 
     def __build_so_generator(self):
         print("Building SO(n) generator.")
@@ -44,6 +55,8 @@ class Geodesic:
         
         Utest = scipy.linalg.expm(A)
         assert np.allclose(Utest, self.U_occ, atol=1e-10), "Generator does not reproduce original matrix."
+
+        return A
 
     def __diagonalize_unitary_matrix(self, U, atol=1e-8):
         """

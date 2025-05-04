@@ -41,36 +41,59 @@ class Localizer:
         """
         self.assess_matrix_properties(self.u_opt)
 
-    def produce_contour_plot(self, orbc, rows, cols, figsize, sz=5, dpi=144):
+    def produce_contour_plot(self, orbc, rows, cols, figsize, sz=5, dpi=144, save_path=None):
         """
         Produce contour plot of the wavefunction using the specified number of rows and columns.
+
+        Parameters:
+            orbc (ndarray): Orbital coefficient matrix
+            rows (int): Number of subplot rows
+            cols (int): Number of subplot columns
+            figsize (tuple): Figure size in inches
+            sz (float): Spatial size for plotting grid (default: 5 a.u.)
+            dpi (int): Figure resolution (default: 144)
+            save_path (str or None): If set, path to save the figure
         """
         fig, ax = plt.subplots(rows, cols, figsize=figsize, dpi=dpi)
 
-        for i in range(0,rows):
-            for j in range(0,cols):
-                dens = self.__plot_wavefunction(self.data['cgfs'], orbc[:, i * rows + j])
+        # Ensure ax is a 2D array, even if rows or cols == 1
+        if rows == 1 and cols == 1:
+            ax = np.array([[ax]])
+        elif rows == 1:
+            ax = np.array([ax])
+        elif cols == 1:
+            ax = np.array([[a] for a in ax])
+
+        for i in range(rows):
+            for j in range(cols):
+                idx = i * cols + j
+                if idx >= orbc.shape[1]:
+                    break  # Avoid index overflow if more subplots than orbitals
+
+                dens = self.__plot_wavefunction(self.data['cgfs'], orbc[:, idx])
                 limit = max(abs(np.min(dens)), abs(np.max(dens)))
 
-                # Create coordinate grid
                 x = np.linspace(-sz, sz, dens.shape[1])
                 y = np.linspace(-sz, sz, dens.shape[0])
                 X, Y = np.meshgrid(x, y)
 
-                # Contour plot
                 cf = ax[i, j].contourf(X, Y, dens, levels=100, cmap='PiYG', vmin=-limit, vmax=limit)
-                cl = ax[i, j].contour(X, Y, dens, levels=10, colors='black', linewidths=0.5)
+                ax[i, j].contour(X, Y, dens, levels=10, colors='black', linewidths=0.5)
                 ax[i, j].set_aspect('equal')
                 ax[i, j].set_xlabel('x [a.u.]')
                 ax[i, j].set_ylabel('y [a.u.]')
 
-                # Add colorbar
                 divider = make_axes_locatable(ax[i, j])
                 cax = divider.append_axes('right', size='5%', pad=0.05)
                 fig.colorbar(cf, cax=cax, orientation='vertical')
 
         plt.tight_layout()
-        plt.show()
+
+        if save_path:
+            plt.savefig(save_path, bbox_inches='tight')
+            print(f"Figure saved to: {save_path}")
+        else:
+            plt.show()
 
 #------------------------------------------------------------------------------#
 # PRIVATE METHODS

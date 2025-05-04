@@ -49,3 +49,4 @@ yarn.lock
 *.log
 
 examples/cache
+examples/output

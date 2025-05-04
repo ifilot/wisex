@@ -1,5 +1,6 @@
 import os, sys
 from pyqint import Molecule
+import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from wisex import Localizer, Geodesic
@@ -15,11 +16,20 @@ localizer.perform_localization(method='fosterboys')
 localizer.report_matrix()
 
 geodesic = Geodesic(localizer.u_opt, nocc=localizer.nocc)
+tt = np.linspace(0, 1, 10)
+
 geodesic.build_generator(group='su(n)')
-u1 = geodesic.interpolate(1.0)
+for i,t in enumerate(tt):
+    U = geodesic.interpolate(t)
+    C = localizer.data['orbc'] @ U
+
+    path = os.path.join(os.path.dirname(__file__), 'output', 'beh2', 'path_su_%d.png' % i)
+    localizer.produce_contour_plot(C, rows=1, cols=3, figsize=(8, 8), sz=2, save_path=path)
+
 geodesic.build_generator(group='so(n)')
-u2 = geodesic.interpolate(1.0)
+for i,t in enumerate(tt):
+    U = geodesic.interpolate(t)
+    C = localizer.data['orbc'] @ U
 
-print(u1)
-
-print(u2)
+    path = os.path.join(os.path.dirname(__file__), 'output', 'beh2', 'path_so_%d.png' % i)
+    localizer.produce_contour_plot(C, rows=1, cols=3, figsize=(8, 8), sz=2, save_path=path)

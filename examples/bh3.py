@@ -1,36 +1,35 @@
 import os, sys
 from pyqint import Molecule
 import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from wisex import Localizer, Geodesic
 
-# construct ethylene molecule
+# construct bh3 molecule
 mol = Molecule()
-mol.add_atom("C", -1.2651, 0.0, 0.0)
-mol.add_atom("C",  1.2651, 0.0, 0.0)
-mol.add_atom("H", -2.4672, 1.1084, 0.0)
-mol.add_atom("H", -2.4672, -1.1084, 0.0)
-mol.add_atom("H",  2.4672, 1.1084, 0.0)
-mol.add_atom("H",  2.4672, -1.1084, 0.0)
+mol.add_atom("B",  0.000,  0.000,  0.000)
+mol.add_atom("H",  1.190,  0.000,  0.000)
+mol.add_atom("H", -0.595,  1.031,  0.000)
+mol.add_atom("H", -0.595, -1.031,  0.000)
 
-localizer = Localizer(mol, 'sto3g', cachefolder=os.path.join(os.path.dirname(__file__), 'cache', 'ethylene'))
+localizer = Localizer(mol, 'sto3g', cachefolder=os.path.join(os.path.dirname(__file__), 'cache', 'bh3'))
 localizer.perform_localization(method='fosterboys')
-localizer.report_matrix()
+#localizer.report_matrix()
 #localizer.show_jacobi_rotations()
 
-outpath = os.path.join(os.path.dirname(__file__), 'output', 'ethylene')
+tt = np.linspace(0, 1, 10)
+outpath = os.path.join(os.path.dirname(__file__), 'output', 'bh3')
 os.makedirs(outpath, exist_ok=True)
 geodesic = Geodesic(localizer.u_opt, nocc=localizer.nocc)
-tt = np.linspace(0, 1, 10)
 
 # geodesic.build_generator(group='su(n)')
 # for i,t in enumerate(tt):
 #     U = geodesic.interpolate(t)
 #     C = localizer.data['orbc'] @ U
 
-#     path = os.path.join(os.path.dirname(__file__), 'output', 'ethylene', 'path_su_%d.png' % i)
-#     localizer.produce_contour_plot(C, rows=2, cols=5, figsize=(16, 8), sz=2, save_path=path)
+#     path = os.path.join(os.path.dirname(__file__), 'output', 'bh3', 'path_su_%d.png' % i)
+#     localizer.produce_contour_plot(C, rows=1, cols=4, figsize=(12, 8), sz=2, save_path=path)
 
 geodesic.build_generator(group='so(n)')
 for i,t in enumerate(tt):
@@ -38,7 +37,7 @@ for i,t in enumerate(tt):
     C = localizer.data['orbc'] @ U
 
 #     path = os.path.join(outpath, 'path_so_%d.png' % i)
-#     localizer.produce_contour_plot(C, rows=2, cols=5, figsize=(16, 8), sz=2, save_path=path)
+#     localizer.produce_contour_plot(C, rows=1, cols=4, figsize=(12, 8), sz=2, save_path=path)
 
 d = [geodesic.calculate_distance(geodesic.interpolate(t)) for t in tt]
 r2 = [localizer.calculate_fbr2(geodesic.interpolate(t), localizer.nocc) for t in tt]

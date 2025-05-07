@@ -26,7 +26,7 @@ class Localizer:
         Perform localization of the MO coefficients using the specified method.
         """
         if method == 'fosterboys':
-            self.orbc_opt, self.r2_opt = localize_fosterboys(self.data['orbc'], self.dipolmat, self.nocc)
+            self.orbc_opt, self.r2_opt, self.screenarr = localize_fosterboys(self.data['orbc'], self.dipolmat, self.nocc)
         elif method == "fosterboys-pyqint":
             resfb = FosterBoys(self.data).run()
             self.orbc_opt = resfb['orbc']
@@ -39,7 +39,7 @@ class Localizer:
         """
         Report the transformation matrix and its properties.
         """
-        self.assess_matrix_properties(self.u_opt)
+        self.__assess_matrix_properties(self.u_opt)
 
     def produce_contour_plot(self, orbc, rows, cols, figsize, sz=5, dpi=144, save_path=None):
         """
@@ -70,15 +70,15 @@ class Localizer:
                 if idx >= orbc.shape[1]:
                     break  # Avoid index overflow if more subplots than orbitals
 
-                dens = self.__plot_wavefunction(self.data['cgfs'], orbc[:, idx])
-                limit = max(abs(np.min(dens)), abs(np.max(dens)))
+                wf = self.__plot_wavefunction(self.data['cgfs'], orbc[:, idx])
+                limit = max(abs(np.min(wf)), abs(np.max(wf)))
 
-                x = np.linspace(-sz, sz, dens.shape[1])
-                y = np.linspace(-sz, sz, dens.shape[0])
+                x = np.linspace(-sz, sz, wf.shape[1])
+                y = np.linspace(-sz, sz, wf.shape[0])
                 X, Y = np.meshgrid(x, y)
 
-                cf = ax[i, j].contourf(X, Y, dens, levels=100, cmap='PiYG', vmin=-limit, vmax=limit)
-                ax[i, j].contour(X, Y, dens, levels=10, colors='black', linewidths=0.5)
+                cf = ax[i, j].contourf(X, Y, wf, levels=100, cmap='PiYG', vmin=-limit, vmax=limit)
+                ax[i, j].contour(X, Y, wf, levels=10, colors='black', linewidths=0.5, vmin=-limit, vmax=limit)
                 ax[i, j].set_aspect('equal')
                 ax[i, j].set_xlabel('x [a.u.]')
                 ax[i, j].set_ylabel('y [a.u.]')
@@ -86,6 +86,7 @@ class Localizer:
                 divider = make_axes_locatable(ax[i, j])
                 cax = divider.append_axes('right', size='5%', pad=0.05)
                 fig.colorbar(cf, cax=cax, orientation='vertical')
+                cf.set_clim(-limit, limit)
 
         plt.tight_layout()
 
@@ -94,6 +95,21 @@ class Localizer:
             print(f"Figure saved to: {save_path}")
         else:
             plt.show()
+    
+    def calculate_fbr2(self, orbc, nocc):
+        return np.sum(np.einsum('pi,qi,pql->il', orbc[:,:nocc], orbc[:,:nocc], self.dipolmat)**2)
+
+    def show_jacobi_rotations(self, figsize=(16,16)):
+        nsteps = len(self.screenarr)
+        npairs = len(self.screenarr[0])
+        nsamples = len(self.screenarr[0][0])
+        theta = np.linspace(-np.pi/4, np.pi/4, nsamples)
+        fig, ax = plt.subplots(nsteps,npairs)
+        for j in range(nsteps):
+            for i in range(npairs):
+                ax[j,i].plot(theta, self.screenarr[j][i])
+        plt.tight_layout()
+        plt.show()
 
 #------------------------------------------------------------------------------#
 # PRIVATE METHODS
@@ -148,7 +164,7 @@ class Localizer:
         # done
         self.__print_ok()
     
-    def assess_matrix_properties(self, M, tol=1e-10):
+    def __assess_matrix_properties(self, M, tol=1e-10):
         """
         Analyze and print properties of a matrix, including whether it belongs to
         U(n), SU(n), O(n), or SO(n), and highlight determinant = -1 cases.

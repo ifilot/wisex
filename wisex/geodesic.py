@@ -37,6 +37,12 @@ class Geodesic:
 
         return U_full
 
+    def calculate_distance(self, U):
+        """
+        Calculate the distance of the geodesic
+        """
+        return scipy.linalg.norm(scipy.linalg.logm(U), 'fro')
+
     def __build_su_generator(self):
         print("Building SU(n) generator.")
         e,v = self.__diagonalize_unitary_matrix(self.U_occ)

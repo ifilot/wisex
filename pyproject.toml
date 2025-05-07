@@ -22,6 +22,7 @@ classifiers = [
 dependencies = [
     "scipy",
     "numpy",
+    "pyqint"
 ]
 
 [tool.setuptools]

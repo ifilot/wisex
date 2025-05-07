@@ -18,7 +18,7 @@ localizer.perform_localization(method='fosterboys')
 #localizer.report_matrix()
 #localizer.show_jacobi_rotations()
 
-tt = np.linspace(0, 1, 10)
+tt = np.linspace(0, 1, 20)
 outpath = os.path.join(os.path.dirname(__file__), 'output', 'bh3')
 os.makedirs(outpath, exist_ok=True)
 geodesic = Geodesic(localizer.u_opt, nocc=localizer.nocc)

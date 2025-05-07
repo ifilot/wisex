@@ -20,7 +20,7 @@ localizer.perform_localization(method='fosterboys')
 outpath = os.path.join(os.path.dirname(__file__), 'output', 'beh2')
 os.makedirs(outpath, exist_ok=True)
 geodesic = Geodesic(localizer.u_opt, nocc=localizer.nocc)
-tt = np.linspace(0, 1, 10)
+tt = np.linspace(0, 1, 20)
 
 # geodesic.build_generator(group='su(n)')
 # for i,t in enumerate(tt):

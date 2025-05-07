@@ -1,6 +1,7 @@
 import os, sys
 from pyqint import Molecule
 import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from wisex import Localizer, Geodesic
@@ -22,7 +23,7 @@ localizer.report_matrix()
 outpath = os.path.join(os.path.dirname(__file__), 'output', 'ethylene')
 os.makedirs(outpath, exist_ok=True)
 geodesic = Geodesic(localizer.u_opt, nocc=localizer.nocc)
-tt = np.linspace(0, 1, 10)
+tt = np.linspace(0, 1, 20)
 
 # geodesic.build_generator(group='su(n)')
 # for i,t in enumerate(tt):

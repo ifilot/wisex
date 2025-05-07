@@ -96,8 +96,14 @@ class Localizer:
         else:
             plt.show()
     
-    def calculate_fbr2(self, orbc, nocc):
-        return np.sum(np.einsum('pi,qi,pql->il', orbc[:,:nocc], orbc[:,:nocc], self.dipolmat)**2)
+    def calculate_fbr2(self, U, nocc):
+        """
+        Given a unitary transformation matrix, determine the R2 value
+        """
+        return np.sum(np.einsum('pi,qi,pql->il', 
+                                (self.data['orbc'] @ U)[:,:nocc], 
+                                (self.data['orbc'] @ U)[:,:nocc], 
+                                self.dipolmat)**2)
 
     def show_jacobi_rotations(self, figsize=(16,16)):
         nsteps = len(self.screenarr)

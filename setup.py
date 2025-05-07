@@ -1,6 +1,5 @@
 from setuptools import Extension, setup
 import os
-import sys
 import re
 
 PKG = "wisex"
@@ -34,7 +33,7 @@ setup(
     version=verstr,
     author="Ivo Filot",
     author_email="ivo@ivofilot.nl",
-    description="Python package for performing plane-wave DFT calculations",
+    description="WISEX explores orbital rotations that leave a Slater determinant invariant, extremizing user-defined metrics and constructing geodesic paths between electronic structure solutions.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://www.github.com/ifilot/wisex",

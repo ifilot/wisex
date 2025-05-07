@@ -22,6 +22,8 @@ requirements:
     - python>=3.9
     - scipy
     - numpy
+    - ifilot::pyqint
+    - ifilot::pytessel
 
 test:
   requires:
@@ -29,6 +31,8 @@ test:
     - scipy
     - setuptools
     - pytest
+    - ifilot::pyqint
+    - ifilot::pytessel
   source_files:
     - tests/*.py
   commands:

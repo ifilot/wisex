@@ -70,7 +70,7 @@ class Localizer:
                 if idx >= orbc.shape[1]:
                     break  # Avoid index overflow if more subplots than orbitals
 
-                wf = self.__plot_wavefunction(self.data['cgfs'], orbc[:, idx])
+                wf = self.__plot_wavefunction(self.data['cgfs'], orbc[:, idx], sz=sz)
                 limit = max(abs(np.min(wf)), abs(np.max(wf)))
 
                 x = np.linspace(-sz, sz, wf.shape[1])
@@ -93,6 +93,7 @@ class Localizer:
         if save_path:
             plt.savefig(save_path, bbox_inches='tight')
             print(f"Figure saved to: {save_path}")
+            plt.close()
         else:
             plt.show()
     

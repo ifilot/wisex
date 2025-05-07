@@ -6,24 +6,31 @@ def localize_fosterboys(orbc, dipolmat, nocc):
     max_iterations = 100
     prev_r2 = None
     iteration = 0
-    screennarr = [] # track mu(theta) relationship over all iterations
+    screennarr = []  # track mu(theta) relationship over all iterations
+
+    print("\nStarting Jacobi rotation with optimizer...\n")
+    print("{:<12} {:<20} {:<20}".format("Iteration", "r² Metric", "Δr²"))
+    print("-" * 54)
 
     while True:
         orbcopt, r2, screenarr = jacobi_sweep_with_optimizer(orbc, dipolmat, nocc)
         screennarr.append(screenarr)
 
-        if prev_r2 is not None and abs(r2 - prev_r2) < threshold:
-            #print(f"Converged after {iteration} iterations.")
+        delta_r2 = abs(r2 - prev_r2) if prev_r2 is not None else float("nan")
+        print("{:<12} {:<20.10f} {:<20.10f}".format(iteration + 1, r2, delta_r2))
+
+        if prev_r2 is not None and delta_r2 < threshold:
+            print("\nConverged after {} iterations.".format(iteration + 1))
             break
 
         if iteration >= max_iterations:
-            #print("Reached maximum number of iterations without full convergence.")
+            print("\nReached max iterations without full convergence.")
             break
 
         prev_r2 = r2
         orbc = orbcopt
         iteration += 1
-    
+
     return orbcopt, r2, screennarr
 
 def screen(orbc, dipolmat, i, j):
@@ -90,6 +97,6 @@ def jacobi_sweep_with_optimizer(orbc, dipolmat, nocc):
 
     # Final <r2> after full sweep
     r2_final = compute_r2(orbc_new)
-    print(f'Jacobi sweep (with optimizer): r² = {r2_final:.10f}')
+    #print(f'Jacobi sweep (with optimizer): r² = {r2_final:.10f}')
 
     return orbc_new, r2_final, screennarr

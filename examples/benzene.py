@@ -25,7 +25,7 @@ for i,t in enumerate(tt):
     C = localizer.data['orbc'] @ U
 
     path = os.path.join(outpath, 'path_so_%d.png' % i)
-    localizer.produce_contour_plot(C, rows=5, cols=5, figsize=(12, 12), sz=5, save_path=path)
+    localizer.produce_contour_plot(C, rows=5, cols=5, figsize=(12, 12), sz=7, save_path=path)
 
 d = [geodesic.calculate_distance(geodesic.interpolate(t)) for t in tt]
 r2 = [localizer.calculate_fbr2(geodesic.interpolate(t), localizer.nocc) for t in tt]

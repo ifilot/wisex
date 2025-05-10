@@ -3,8 +3,6 @@ import numpy as np
 import pickle
 import os
 from .localization.fosterboys import localize_fosterboys
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 class Localizer:
     def __init__(self, mol, basis, cachefolder):
@@ -32,70 +30,22 @@ class Localizer:
             self.orbc_opt = resfb['orbc']
             self.r2_opt = resfb['r2final']
         
+        # re-order the orbitals with increasing energy
+        self.orbe, self.orbc_opt = self.__calculate_molecular_orbital_energies(self.orbc_opt)
+
         # calculate unitary transformation matrix
         self.u_opt = self.data['orbc'].T @ self.data['overlap'] @ self.orbc_opt
+
+        # ensure that transformation has determinant of +1 by swapping the sign
+        # of one of the core orbitals
+        if np.linalg.det(self.u_opt) < 0:
+            self.u_opt[:,0] *= -1
 
     def report_matrix(self):
         """
         Report the transformation matrix and its properties.
         """
         self.__assess_matrix_properties(self.u_opt)
-
-    def produce_contour_plot(self, orbc, rows, cols, figsize, sz=5, dpi=144, save_path=None):
-        """
-        Produce contour plot of the wavefunction using the specified number of rows and columns.
-
-        Parameters:
-            orbc (ndarray): Orbital coefficient matrix
-            rows (int): Number of subplot rows
-            cols (int): Number of subplot columns
-            figsize (tuple): Figure size in inches
-            sz (float): Spatial size for plotting grid (default: 5 a.u.)
-            dpi (int): Figure resolution (default: 144)
-            save_path (str or None): If set, path to save the figure
-        """
-        fig, ax = plt.subplots(rows, cols, figsize=figsize, dpi=dpi)
-
-        # Ensure ax is a 2D array, even if rows or cols == 1
-        if rows == 1 and cols == 1:
-            ax = np.array([[ax]])
-        elif rows == 1:
-            ax = np.array([ax])
-        elif cols == 1:
-            ax = np.array([[a] for a in ax])
-
-        for i in range(rows):
-            for j in range(cols):
-                idx = i * cols + j
-                if idx >= orbc.shape[1]:
-                    break  # Avoid index overflow if more subplots than orbitals
-
-                wf = self.__plot_wavefunction(self.data['cgfs'], orbc[:, idx], sz=sz)
-                limit = max(abs(np.min(wf)), abs(np.max(wf)))
-
-                x = np.linspace(-sz, sz, wf.shape[1])
-                y = np.linspace(-sz, sz, wf.shape[0])
-                X, Y = np.meshgrid(x, y)
-
-                cf = ax[i, j].contourf(X, Y, wf, levels=100, cmap='PiYG', vmin=-limit, vmax=limit)
-                ax[i, j].contour(X, Y, wf, levels=10, colors='black', linewidths=0.5, vmin=-limit, vmax=limit)
-                ax[i, j].set_aspect('equal')
-                ax[i, j].set_xlabel('x [a.u.]')
-                ax[i, j].set_ylabel('y [a.u.]')
-
-                divider = make_axes_locatable(ax[i, j])
-                cax = divider.append_axes('right', size='5%', pad=0.05)
-                fig.colorbar(cf, cax=cax, orientation='vertical')
-                cf.set_clim(-limit, limit)
-
-        plt.tight_layout()
-
-        if save_path:
-            plt.savefig(save_path, bbox_inches='tight')
-            print(f"Figure saved to: {save_path}")
-            plt.close()
-        else:
-            plt.show()
     
     def calculate_fbr2(self, U, nocc):
         """
@@ -218,16 +168,18 @@ class Localizer:
         """
         print("\033[92m[OK]\033[0m")
 
-    def __plot_wavefunction(self, cgfs, coeff, sz=5, npts=100):
-        # build integrator
-        integrator = PyQInt()
+    def __calculate_molecular_orbital_energies(self, C):
+        """
+        Calculate the one-electron MO energies from the Hamiltonian matrix
+        and the coefficient matrix, both in their original basis
 
-        # build grid
-        x = np.linspace(-sz, sz, npts)
-        y = np.linspace(-sz, sz, npts)
-        xx, yy = np.meshgrid(x,y)
-        zz = np.zeros(len(x) * len(y))
-        grid = np.vstack([xx.flatten(), yy.flatten(), zz]).reshape(3,-1).T
-        res = integrator.plot_wavefunction(grid, coeff, cgfs).reshape((len(y), len(x)))
+        Return *ordered* list of eigenvalue and -vector pairs
+        """
+        orbe = np.zeros(len(C))
+        for i in range(len(C)):
+            orbe[i] = C[:,i].dot(self.data['fock'].dot(C[:,i]))
 
-        return res
+        # produce list of indices for eigenvalues in ascending order
+        oidx = np.argsort(orbe)
+
+        return orbe[oidx], C[:,oidx]

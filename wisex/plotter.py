@@ -28,6 +28,7 @@ class Plotter:
             vmax (float or None): Maximum value for color scale (default: None)
             save_path (str or None): If set, path to save the figures
         """
+        orbe = localizer.orbe
         tt = np.linspace(0, 1, nrimages)
 
         for i,t in tqdm(enumerate(tt), total=nrimages, desc='Generating plots'):
@@ -35,7 +36,7 @@ class Plotter:
             C = localizer.data['orbc'] @ U
 
             path = os.path.join(save_path, 'path_so_%03i.png' % (i+1))
-            self.produce_contour_plot(localizer.data['cgfs'], C,
+            self.produce_contour_plot(localizer.data['cgfs'], C, orbe,
                                     rows=rows,  cols=cols,  figsize=figsize, 
                                     sz=sz, vmin=vmin, vmax=vmax, save_path=path)
 
@@ -56,7 +57,7 @@ class Plotter:
         plt.savefig(path, bbox_inches='tight')
         plt.close()
 
-    def produce_contour_plot(self, cgfs, orbc, rows, cols, figsize, sz=5, dpi=144, 
+    def produce_contour_plot(self, cgfs, orbc, orbe, rows, cols, figsize, sz=5, dpi=144, 
                              vmin=None, vmax=None, save_path=None):
         """
         Produce contour plot of the wavefunction using the specified number of rows and columns.
@@ -102,6 +103,7 @@ class Plotter:
                 ax[i, j].set_aspect('equal')
                 ax[i, j].set_xlabel('x [a.u.]')
                 ax[i, j].set_ylabel('y [a.u.]')
+                ax[i,j].set_title(f'MO {idx+1}: %.4f Ht' % (orbe[idx]))
 
                 # Create a separate colorbar using a dummy mappable
                 divider = make_axes_locatable(ax[i, j])
@@ -123,6 +125,14 @@ class Plotter:
             plt.show()
     
     def __plot_wavefunction(self, cgfs, coeff, sz=5, npts=100):
+        """
+        Produce the scalar field associated with the many-electron wavefunction.
+        Parameters:
+            cgfs (ndarray): Basis set (list of CGFs)
+            coeff (ndarray): Coefficient vector for the molecular orbital
+            sz (float): Spatial extent for plotting grid (default: 5 a.u.)
+            npts (int): Number of points in each dimension for the grid (default: 100)
+        """
         # build integrator
         integrator = PyQInt()
 

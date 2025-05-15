@@ -1,13 +1,23 @@
 from pyqint import PyQInt, Molecule, GeometryOptimization, FosterBoys
+import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 import os
 from .localization.fosterboys import localize_fosterboys
 
 class Localizer:
-    def __init__(self, mol, basis, cachefolder):
+    """
+    Class to perform localization of molecular orbitals, currently only
+    supports the Foster-Boys method.
+    """
+    def __init__(self, mol:Molecule, basis:str, cachefolder:str):
         """
         Construct MOFlow object using completes RHF calculation
+
+        Parameters:
+            mol (Molecule): Molecule object
+            basis (str): Basis set name
+            cachefolder (str): Folder to store cached data
         """
         self.mol = mol
         self.basis = basis
@@ -15,13 +25,19 @@ class Localizer:
         os.makedirs(self.cachefolder, exist_ok=True)
         print("Using cache folder: ", self.cachefolder)
 
-        # perform Geometry optimization
+        # perform geometry optimization
         self.__prepare()
+
+        # build the dipole tensor which is used for localization within the
+        # Foster-Boys method
         self.__build_dipole_tensor()
     
-    def perform_localization(self, method='fosterboys'):
+    def perform_localization(self, method:str='fosterboys'):
         """
         Perform localization of the MO coefficients using the specified method.
+
+        Parameters:
+            method (str): Localization method to use. Options are 'fosterboys' or 'fosterboys-pyqint'.
         """
         if method == 'fosterboys':
             self.orbc_opt, self.r2_opt, self.screenarr = localize_fosterboys(self.data['orbc'], self.dipolmat, self.nocc)
@@ -30,8 +46,8 @@ class Localizer:
             self.orbc_opt = resfb['orbc']
             self.r2_opt = resfb['r2final']
         
-        # re-order the orbitals with increasing energy
-        self.orbe, self.orbc_opt = self.__calculate_molecular_orbital_energies(self.orbc_opt)
+        # re-order the orbitals with increasing energy and average dipole moment
+        self.orbe, self.orbc_opt = self.__reorder_orbitals(self.orbc_opt)
 
         # calculate unitary transformation matrix
         self.u_opt = self.data['orbc'].T @ self.data['overlap'] @ self.orbc_opt
@@ -57,6 +73,9 @@ class Localizer:
                                 self.dipolmat)**2)
 
     def show_jacobi_rotations(self, figsize=(16,16)):
+        """
+        Show the Jacobi rotations used
+        """       
         nsteps = len(self.screenarr)
         npairs = len(self.screenarr[0])
         nsamples = len(self.screenarr[0][0])
@@ -168,18 +187,30 @@ class Localizer:
         """
         print("\033[92m[OK]\033[0m")
 
-    def __calculate_molecular_orbital_energies(self, C):
+    def __computer_ravg(self, C):
         """
-        Calculate the one-electron MO energies from the Hamiltonian matrix
-        and the coefficient matrix, both in their original basis
-
-        Return *ordered* list of eigenvalue and -vector pairs
+        Calculate the average dipole moment for a given set of
+        molecular orbitals
         """
-        orbe = np.zeros(len(C))
-        for i in range(len(C)):
-            orbe[i] = C[:,i].dot(self.data['fock'].dot(C[:,i]))
+        return np.einsum('pi,qi,pql->il', C, C, self.dipolmat)
 
-        # produce list of indices for eigenvalues in ascending order
-        oidx = np.argsort(orbe)
+    def __reorder_orbitals(self, C, energy_tol=1e-4, spatial_tol=1e-5):
+        """
+        Order molecular orbitals first by energy (with tolerance), then by spatial orientation
+        in the xy-plane, breaking ties based on binned coordinates.
+        """
+        orbe = np.array([C[:,i].dot(self.data['fock'].dot(C[:,i])) for i in range(C.shape[1])])
+        ravg = self.__computer_ravg(C)  # shape: (n_orbitals, 3), columns: x, y, z
 
-        return orbe[oidx], C[:,oidx]
+        def sort_key(i):
+            energy_bin = int(np.floor(orbe[i] / energy_tol))
+
+            # Get binned spatial coordinates
+            x_bin = int(np.floor(ravg[i, 0] / spatial_tol))
+            y_bin = int(np.floor(ravg[i, 1] / spatial_tol))
+            z_bin = int(np.floor(ravg[i, 2] / spatial_tol))
+
+            return (energy_bin, z_bin, y_bin, x_bin)
+
+        indices = sorted(range(len(C.T)), key=sort_key)
+        return orbe[indices], C[:, indices]

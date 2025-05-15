@@ -144,8 +144,7 @@ class Geodesic:
         det = np.linalg.det(O)
 
         A = scipy.linalg.logm(O)
-        A = (A - A.T) / 2
-        A = A.real
+        A = (A - A.T.conj()) / 2
         
         Utest = scipy.linalg.expm(A)
         assert np.allclose(Utest, O, atol=1e-8), "Generator does not reproduce original matrix."

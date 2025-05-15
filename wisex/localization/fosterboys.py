@@ -2,6 +2,14 @@ import numpy as np
 import scipy.optimize
 
 def localize_fosterboys(orbc, dipolmat, nocc):
+    """
+    Perform localization of molecular orbitals using the Foster-bOys method
+
+    Parameters:
+        orbc (ndarray): Molecular orbital coefficient matrix (nbasis, nocc)
+        dipolmat (ndarray): Dipole tensor (nbasis, nbasis, 3)
+        nocc (int): Number of occupied orbitals
+    """
     threshold = 1e-6
     max_iterations = 100
     prev_r2 = None
@@ -11,6 +19,9 @@ def localize_fosterboys(orbc, dipolmat, nocc):
     print("\nStarting Jacobi rotation with optimizer...\n")
     print("{:<12} {:<20} {:<20}".format("Iteration", "r² Metric", "Δr²"))
     print("-" * 54)
+
+    r2 = compute_r2(orbc[:,:nocc], dipolmat)
+    print("{:<12} {:<20.10f} {:<20.10f}".format(0, r2, float("nan")))
 
     while True:
         orbcopt, r2, screenarr = jacobi_sweep_with_optimizer(orbc, dipolmat, nocc)
@@ -60,10 +71,6 @@ def jacobi_sweep_with_optimizer(orbc, dipolmat, nocc):
     orbc_new = orbc.copy()
     screennarr = []
 
-    def compute_r2(C_occ_local):
-        dipole_est = np.einsum('pi,qi,pql->il', C_occ_local, C_occ_local, dipolmat)
-        return np.sum(dipole_est ** 2)
-
     for i in range(nocc):
         for j in range(i + 1, nocc):
             
@@ -71,12 +78,14 @@ def jacobi_sweep_with_optimizer(orbc, dipolmat, nocc):
             screennarr.append(screen(orbc, dipolmat, i, j))
 
             def cost_fn(alpha):
-                """Cost function: negative R2 after rotating orbitals i and j by angle alpha."""
+                """
+                Cost function: negative R2 after rotating orbitals i and j by angle alpha.
+                """
                 c, s = np.cos(alpha), np.sin(alpha)
                 C_tmp = orbc_new.copy()
                 C_tmp[:, i] =  c * orbc_new[:, i] + s * orbc_new[:, j]
                 C_tmp[:, j] = -s * orbc_new[:, i] + c * orbc_new[:, j]
-                return -compute_r2(C_tmp)
+                return -compute_r2(C_tmp[:,:nocc], dipolmat)
 
             # Optimize rotation angle alpha
             res = scipy.optimize.minimize_scalar(
@@ -96,7 +105,19 @@ def jacobi_sweep_with_optimizer(orbc, dipolmat, nocc):
             orbc_new[:, j] = C_rot_j
 
     # Final <r2> after full sweep
-    r2_final = compute_r2(orbc_new)
-    #print(f'Jacobi sweep (with optimizer): r² = {r2_final:.10f}')
+    r2_final = compute_r2(orbc_new[:,:nocc], dipolmat)
 
     return orbc_new, r2_final, screennarr
+
+def compute_r2(orbc, dipolmat):
+    """
+    Compute the squared dipole norm for the given orbital coefficients.
+    
+    Parameters:
+        orbc (ndarray): Molecular orbital coefficient matrix (nbasis, nocc)
+        dipolmat (ndarray): Dipole tensor (nbasis, nbasis, 3)
+    
+    Returns:
+        r2 (float): Squared dipole norm
+    """
+    return np.sum(np.einsum('pi,qi,pql->il', orbc, orbc, dipolmat)**2)

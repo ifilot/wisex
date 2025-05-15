@@ -19,14 +19,14 @@ outpath = os.path.join(os.path.dirname(__file__), 'output', 'beh2')
 os.makedirs(outpath, exist_ok=True)
 geodesic = Geodesic(localizer.u_opt, nocc=localizer.nocc, group='so(n)')
 
-plotter = Plotter()
-plotter.plot(nrimages=180,
-             rows=1, 
-             cols=3, figsize=(12, 8), 
-             geodesic=geodesic, 
-             localizer=localizer, 
-             vmin=-0.5,
-             vmax=0.5,
-             sz=5, 
-             dpi=144, 
-             save_path=outpath)
+# plotter = Plotter()
+# plotter.plot(nrimages=180,
+#              rows=1, 
+#              cols=3, figsize=(12, 8), 
+#              geodesic=geodesic, 
+#              localizer=localizer, 
+#              vmin=-0.5,
+#              vmax=0.5,
+#              sz=5, 
+#              dpi=144, 
+#              save_path=outpath)

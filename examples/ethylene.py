@@ -20,10 +20,10 @@ localizer.perform_localization(method='fosterboys')
 
 outpath = os.path.join(os.path.dirname(__file__), 'output', 'ethylene')
 os.makedirs(outpath, exist_ok=True)
-geodesic = Geodesic(localizer.u_opt, nocc=localizer.nocc, group='so(n)')
+geodesic = Geodesic(localizer.u_opt, nocc=localizer.nocc, group='su(n)')
 
 plotter = Plotter()
-plotter.plot(nrimages=360,
+plotter.plot(nrimages=10,
              rows=2, 
              cols=4, figsize=(16, 8),
              geodesic=geodesic, 
